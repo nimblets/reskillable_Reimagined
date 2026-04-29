@@ -68,9 +68,11 @@ public class Configuration {
 
     private static final ModConfigSpec.BooleanValue ENABLE_SECOND_SKILL_PAGE;
     private static final ModConfigSpec.ConfigValue<String> SUBPAGE_NAV_POSITION;
+    private static final ModConfigSpec.ConfigValue<List<? extends String>> DISABLED_BASE_SKILLS;
 
     private static final int MAX_CUSTOM_SKILLS = 8;
     private static List<CustomSkillSlot> customSkills = new ArrayList<>();
+    private static Set<String> disabledBaseSkills = new HashSet<>();
 
     private static boolean disableWool;
     private static boolean showTabButtons;
@@ -329,6 +331,9 @@ public class Configuration {
         builder.comment("Enable a second skill page for up to 8 custom skills loaded from custom_skills.json.");
         ENABLE_SECOND_SKILL_PAGE = builder.define("enableSecondSkillPage", false);
 
+        builder.comment("Base skills to disable. Valid: attack, defense, mining, gathering, farming, building, agility, magic");
+        DISABLED_BASE_SKILLS = builder.defineListAllowEmpty("disabledBaseSkills", List.of(), s -> s instanceof String);
+
         builder.comment("Where the built-in/custom page arrows should appear. Valid: TOP, BOTTOM, LEFT, RIGHT.");
         SUBPAGE_NAV_POSITION = builder.define("subpageNavPosition", "BOTTOM");
 
@@ -375,9 +380,32 @@ public class Configuration {
                 DEFAULT_CUSTOM_SKILLS
         );
 
+        disabledBaseSkills = parseDisabledBaseSkills(DISABLED_BASE_SKILLS.get());
+
         skillLocks = parseSkillLocks(skillData.get("skillLocks"));
         craftSkillLocks = parseSkillLocks(craftData.get("craftSkillLocks"));
         attackSkillLocks = parseSkillLocks(attackData.get("attackSkillLocks"));
+    }
+
+    private static Set<String> parseDisabledBaseSkills(List<? extends String> disabled) {
+        Set<String> disabledSet = new HashSet<>();
+        if (disabled == null) {
+            return disabledSet;
+        }
+
+        for (String skillName : disabled) {
+            if (skillName != null && !skillName.isBlank()) {
+                String normalized = skillName.trim().toLowerCase(Locale.ROOT);
+                // Validate that it's a real base skill
+                try {
+                    Skill.valueOf(normalized.toUpperCase(Locale.ROOT));
+                    disabledSet.add(normalized);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("[Reskillable] Invalid disabled base skill '" + skillName + "'. Valid values: attack, defense, mining, gathering, farming, building, agility, magic");
+                }
+            }
+        }
+        return disabledSet;
     }
 
     private static List<CustomSkillSlot> loadCustomSkills(String filename, String defaultContent) {
@@ -625,6 +653,27 @@ public class Configuration {
         }
 
         return false;
+    }
+
+    public static boolean isBaseSkillDisabled(String skillName) {
+        if (skillName == null || skillName.isBlank()) {
+            return false;
+        }
+        return disabledBaseSkills.contains(skillName.trim().toLowerCase(Locale.ROOT));
+    }
+
+    public static Set<String> getDisabledBaseSkills() {
+        return Set.copyOf(disabledBaseSkills);
+    }
+
+    public static Skill[] getEnabledBaseSkills() {
+        List<Skill> enabled = new ArrayList<>();
+        for (Skill skill : Skill.values()) {
+            if (!disabledBaseSkills.contains(skill.name().toLowerCase(Locale.ROOT))) {
+                enabled.add(skill);
+            }
+        }
+        return enabled.toArray(new Skill[0]);
     }
 
     public static final class CustomSkillSlot {

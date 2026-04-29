@@ -323,6 +323,11 @@ public class SkillModel implements INBTSerializable<CompoundTag> {
     public void updateSkillAttributeBonuses(Player player) {
         // Built-in skill perks
         for (SkillAttributeBonus bonus : SkillAttributeBonus.values()) {
+            // Skip disabled base skills
+            if (Configuration.isBaseSkillDisabled(bonus.skill.name())) {
+                continue;
+            }
+
             Attribute attribute = bonus.getAttribute();
             if (attribute == null) continue;
 

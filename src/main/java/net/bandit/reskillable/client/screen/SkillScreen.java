@@ -72,7 +72,22 @@ public class SkillScreen extends Screen {
     }
 
     private int getMaxSubPage() {
-        return Configuration.isSecondSkillPageEnabled() ? 1 : 0;
+        if (!Configuration.isSecondSkillPageEnabled()) {
+            return 0;
+        }
+        
+        if (page == 0) {
+            // Skills page: check if there are custom skills that need page 2
+            Skill[] enabledBaseSkills = Configuration.getEnabledBaseSkills();
+            List<Configuration.CustomSkillSlot> customSkills = Configuration.getEnabledCustomSkills();
+            int customSkillsOnPage1 = Math.max(0, 8 - enabledBaseSkills.length);
+            
+            // Show page 2 if there are custom skills beyond what fits on page 1
+            return customSkills.size() > customSkillsOnPage1 ? 1 : 0;
+        }
+        
+        // Perks page: use default behavior
+        return 1;
     }
 
     private void changeSubPage(int delta) {
@@ -156,20 +171,41 @@ public class SkillScreen extends Screen {
 
         if (page == 0) {
             if (skillSubPage == 0) {
-                Skill[] skills = Skill.values();
-                for (int i = 0; i < Math.min(8, skills.length); i++) {
-                    int x = left + i % 2 * 83;
-                    int y = top + i / 2 * 36;
-                    addRenderableWidget(new SkillButton(x, y, normalizeSkillId(skills[i].name())));
+                // Get enabled base skills and custom skills
+                Skill[] enabledBaseSkills = Configuration.getEnabledBaseSkills();
+                List<Configuration.CustomSkillSlot> customSkills = Configuration.getEnabledCustomSkills();
+                
+                int slotIndex = 0;
+                
+                // First, fill with enabled base skills
+                for (int i = 0; i < enabledBaseSkills.length && slotIndex < 8; i++) {
+                    int x = left + slotIndex % 2 * 83;
+                    int y = top + slotIndex / 2 * 36;
+                    addRenderableWidget(new SkillButton(x, y, normalizeSkillId(enabledBaseSkills[i].name())));
+                    slotIndex++;
+                }
+                
+                // Then fill remaining slots with custom skills (that don't fit on page 2)
+                for (int i = 0; i < customSkills.size() && slotIndex < 8; i++) {
+                    int x = left + slotIndex % 2 * 83;
+                    int y = top + slotIndex / 2 * 36;
+                    addRenderableWidget(new CustomSkillButton(x, y, customSkills.get(i)));
+                    slotIndex++;
                 }
             } else if (skillSubPage == 1 && Configuration.isSecondSkillPageEnabled()) {
-                List<Configuration.CustomSkillSlot> customSkills = Configuration.getCustomSkills();
-                for (int i = 0; i < 8; i++) {
-                    int x = left + i % 2 * 83;
-                    int y = top + i / 2 * 36;
-
-                    Configuration.CustomSkillSlot slot = i < customSkills.size() ? customSkills.get(i) : null;
-                    addRenderableWidget(new CustomSkillButton(x, y, slot));
+                // Page 2: Show remaining custom skills
+                Skill[] enabledBaseSkills = Configuration.getEnabledBaseSkills();
+                List<Configuration.CustomSkillSlot> customSkills = Configuration.getEnabledCustomSkills();
+                
+                // Calculate how many custom skills fit on page 1
+                int customSkillsOnPage1 = Math.max(0, 8 - enabledBaseSkills.length);
+                
+                // Page 2 shows the rest
+                for (int i = customSkillsOnPage1; i < customSkills.size() && i < customSkillsOnPage1 + 8; i++) {
+                    int pageSlotIndex = i - customSkillsOnPage1;
+                    int x = left + pageSlotIndex % 2 * 83;
+                    int y = top + pageSlotIndex / 2 * 36;
+                    addRenderableWidget(new CustomSkillButton(x, y, customSkills.get(i)));
                 }
             }
         }
@@ -257,38 +293,58 @@ public class SkillScreen extends Screen {
 
         if (page == 0) {
             if (skillSubPage == 0) {
-                int i = 0;
-                for (Skill skill : Skill.values()) {
-                    if (i >= 8) break;
+                // Get enabled base skills and custom skills
+                Skill[] enabledBaseSkills = Configuration.getEnabledBaseSkills();
+                List<Configuration.CustomSkillSlot> customSkills = Configuration.getEnabledCustomSkills();
+                
+                int slotIndex = 0;
+                
+                // First, display XP costs for enabled base skills
+                for (int i = 0; i < enabledBaseSkills.length && slotIndex < 8; i++) {
+                    int x = left + (slotIndex % 2) * 83 + 10;
+                    int y = top + (slotIndex / 2) * 36 + 20;
 
-                    int x = left + (i % 2) * 83 + 10;
-                    int y = top + (i / 2) * 36 + 20;
-
-                    String skillId = normalizeSkillId(skill.name());
+                    String skillId = normalizeSkillId(enabledBaseSkills[i].name());
                     String xpCost = xpCostDisplay.getOrDefault(skillId, "N/A");
                     int color = xpCostColor.getOrDefault(skillId, 0xFFFFFF);
 
                     guiGraphics.drawString(font, "XP: " + xpCost, x, y, color, false);
-                    i++;
+                    slotIndex++;
                 }
-            } else if (skillSubPage == 1 && Configuration.isSecondSkillPageEnabled()) {
-                List<Configuration.CustomSkillSlot> customSkills = Configuration.getCustomSkills();
+                
+                // Then display XP costs for custom skills that fit on page 1
+                for (int i = 0; i < customSkills.size() && slotIndex < 8; i++) {
+                    int x = left + (slotIndex % 2) * 83 + 10;
+                    int y = top + (slotIndex / 2) * 36 + 20;
 
-                for (int i = 0; i < 8; i++) {
-                    int x = left + (i % 2) * 83 + 10;
-                    int y = top + (i / 2) * 36 + 20;
-
-                    Configuration.CustomSkillSlot slot = i < customSkills.size() ? customSkills.get(i) : null;
-                    String skillId = slot != null ? normalizeSkillId(slot.id) : "";
+                    String skillId = normalizeSkillId(customSkills.get(i).id);
                     String xpCost = xpCostDisplay.getOrDefault(skillId, "N/A");
                     int color = xpCostColor.getOrDefault(skillId, 0xFFFFFF);
 
-                    if (slot != null && slot.isEnabled()) {
-                        guiGraphics.drawString(font, "XP: " + xpCost, x, y, color, false);
-                    }
+                    guiGraphics.drawString(font, "XP: " + xpCost, x, y, color, false);
+                    slotIndex++;
+                }
+            } else if (skillSubPage == 1 && Configuration.isSecondSkillPageEnabled()) {
+                Skill[] enabledBaseSkills = Configuration.getEnabledBaseSkills();
+                List<Configuration.CustomSkillSlot> customSkills = Configuration.getEnabledCustomSkills();
+                
+                // Calculate how many custom skills fit on page 1
+                int customSkillsOnPage1 = Math.max(0, 8 - enabledBaseSkills.length);
+                
+                // Page 2: show remaining custom skills
+                for (int i = customSkillsOnPage1; i < customSkills.size() && i < customSkillsOnPage1 + 8; i++) {
+                    int pageSlotIndex = i - customSkillsOnPage1;
+                    int x = left + (pageSlotIndex % 2) * 83 + 10;
+                    int y = top + (pageSlotIndex / 2) * 36 + 20;
+
+                    String skillId = normalizeSkillId(customSkills.get(i).id);
+                    String xpCost = xpCostDisplay.getOrDefault(skillId, "N/A");
+                    int color = xpCostColor.getOrDefault(skillId, 0xFFFFFF);
+
+                    guiGraphics.drawString(font, "XP: " + xpCost, x, y, color, false);
                 }
             }
-        } else {
+        } else if (page == 1) {
             if (perkSubPage == 0) {
                 renderPerksPage(guiGraphics, left, top);
             } else {
@@ -351,8 +407,9 @@ public class SkillScreen extends Screen {
         if (model == null) return;
 
         int row = 0;
+        Skill[] enabledBaseSkills = Configuration.getEnabledBaseSkills();
 
-        for (Skill skill : Skill.values()) {
+        for (Skill skill : enabledBaseSkills) {
             if (row >= 8) break;
 
             int skillLevel = model.getSkillLevel(normalizeSkillId(skill.name()));
@@ -690,7 +747,7 @@ public class SkillScreen extends Screen {
         if (rules == null || rules.isEmpty()) return GateUiResult.allowed();
 
         int totalLevels = 0;
-        for (Skill s : Skill.values()) totalLevels += model.getSkillLevel(normalizeSkillId(s.name()));
+        for (Skill s : Configuration.getEnabledBaseSkills()) totalLevels += model.getSkillLevel(normalizeSkillId(s.name()));
         for (Configuration.CustomSkillSlot slot : Configuration.getCustomSkills()) {
             if (slot != null && slot.isEnabled()) {
                 totalLevels += model.getSkillLevel(normalizeSkillId(slot.id));
@@ -1326,7 +1383,7 @@ public class SkillScreen extends Screen {
 
         if (perkSubPage == 0) {
             int row = 0;
-            for (Skill skill : Skill.values()) {
+            for (Skill skill : Configuration.getEnabledBaseSkills()) {
                 if (row >= 8) break;
 
                 int boxX = left + PERK_BOX_X;
