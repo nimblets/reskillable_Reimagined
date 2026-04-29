@@ -1,5 +1,6 @@
 package net.bandit.reskillable.common.network.payload;
 
+import net.bandit.reskillable.Configuration;
 import net.bandit.reskillable.common.capabilities.SkillModel;
 import net.bandit.reskillable.common.skills.Skill;
 import net.bandit.reskillable.common.gating.GateClientCache;
@@ -48,7 +49,8 @@ public record SyncGateStatus(int skillIndex, boolean blocked, Component missing)
     }
 
     public static void sendAll(ServerPlayer player) {
-        for (Skill s : Skill.values()) send(player, s);
+        // Only sync gate status for enabled base skills to avoid syncing disabled skills
+        for (Skill s : Configuration.getEnabledBaseSkills()) send(player, s);
     }
 
     public static void handleClient(SyncGateStatus msg) {

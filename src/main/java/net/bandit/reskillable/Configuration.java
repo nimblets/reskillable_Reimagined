@@ -574,10 +574,6 @@ public class Configuration {
     }
 
     public static boolean hasEnabledCustomSkills() {
-        if (!isSecondSkillPageEnabled()) {
-            return false;
-        }
-
         for (CustomSkillSlot slot : customSkills) {
             if (slot != null && slot.isEnabled()) {
                 return true;
@@ -589,10 +585,6 @@ public class Configuration {
 
     public static List<CustomSkillSlot> getEnabledCustomSkills() {
         List<CustomSkillSlot> enabled = new ArrayList<>();
-        if (!isSecondSkillPageEnabled()) {
-            return enabled;
-        }
-
         for (CustomSkillSlot slot : customSkills) {
             if (slot != null && slot.isEnabled()) {
                 enabled.add(slot);

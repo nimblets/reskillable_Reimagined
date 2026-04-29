@@ -198,6 +198,37 @@ The main config controls mod behavior.
 | `cropGrowthChancePer5Levels` | Farming growth bonus |
 | `gatheringXpBonus` | Extra XP from gathering |
 
+### Disabling Features in TOML
+
+The config file is generated under `config/reskillable-server.toml`.
+Set boolean values to `false` to turn features off, and use an empty list to clear list-based options.
+
+Example:
+
+```toml
+disableWoolDrops = false
+enableSkillLeveling = false
+enableSkillUpMessage = false
+showTabButtons = false
+showSubpageTitles = false
+disabledBaseSkills = ["attack", "magic"]
+skillAliases = []
+```
+
+Common disable options:
+
+- `disableWoolDrops` turns off the wool-drop restriction.
+- `enableSkillLeveling` disables leveling through the GUI or skill selection.
+- `enableSkillUpMessage` hides the skill-up chat message.
+- `showTabButtons` hides the inventory tab buttons.
+- `showSubpageTitles` hides the built-in and custom subpage titles.
+- `disabledBaseSkills` removes the listed base skills from the mod.
+
+**📝 Migration Note:** `enableSecondSkillPage` is now **deprecated** and has been removed. Pagination is now automatic based on content:
+- Skills and perks are now **dynamically paginated** (8 items per page)
+- Additional pages are created automatically when needed
+- **If you have an existing config with `enableSecondSkillPage`, remove this line** — it will be ignored and is no longer necessary
+
 ---
 
 ## ❤️ Health Scaling
