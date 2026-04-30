@@ -3,6 +3,7 @@ package net.bandit.reskillable.common.commands;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.bandit.reskillable.Configuration;
+import net.bandit.reskillable.common.network.payload.SyncSkillConfig;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -19,6 +20,13 @@ public class Commands {
                         .then(LiteralArgumentBuilder.<CommandSourceStack>literal("reload")
                                 .executes(context -> {
                                     Configuration.load();
+                                SyncSkillConfig.sendToAll(
+                                    context.getSource().getServer(),
+                                    Configuration.getSkillLocks(),
+                                    Configuration.getCraftSkillLocks(),
+                                    Configuration.getAttackSkillLocks(),
+                                    true
+                                );
                                     context.getSource().sendSuccess(() -> Component.literal("Skill configuration reloaded"), true);
                                     return 1;
                                 })
@@ -38,6 +46,13 @@ public class Commands {
         try {
             int itemCount = Configuration.scanModItems(modId);
             if (itemCount > 0) {
+                SyncSkillConfig.sendToAll(
+                        source.getServer(),
+                        Configuration.getSkillLocks(),
+                        Configuration.getCraftSkillLocks(),
+                        Configuration.getAttackSkillLocks(),
+                        true
+                );
                 source.sendSuccess(() -> Component.literal("Added " + itemCount + " items from mod '" + modId + "' to skill_locks.json."), true);
                 return 1;
             } else {

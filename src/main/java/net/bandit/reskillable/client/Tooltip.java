@@ -78,33 +78,56 @@ public class Tooltip {
         }
 
         Requirement[] requirements = Configuration.getRequirements(effectiveKey);
-        if (requirements == null || requirements.length == 0) {
+        Requirement[] craftRequirements = Configuration.getCraftRequirements(effectiveKey);
+
+        if ((requirements == null || requirements.length == 0) && (craftRequirements == null || craftRequirements.length == 0)) {
             return;
         }
 
         List<Component> tooltips = event.getToolTip();
-
-        tooltips.add(Component.literal(""));
-        tooltips.add(
-                Component.translatable("tooltip.requirements")
-                        .append(":")
-                        .withStyle(ChatFormatting.GRAY)
-        );
 
         SkillModel skillModel = SkillModel.get(Minecraft.getInstance().player);
         if (skillModel == null) {
             return;
         }
 
-        for (Requirement req : requirements) {
-            boolean meets = skillModel.getSkillLevel(req.skill) >= req.level;
-
+        if (requirements != null && requirements.length > 0) {
+            tooltips.add(Component.literal(""));
             tooltips.add(
-                    Component.literal("")
-                            .append(getSkillDisplayComponent(req.skill))
-                            .append(" " + req.level)
-                            .withStyle(meets ? ChatFormatting.GREEN : ChatFormatting.RED)
+                    Component.translatable("tooltip.requirements")
+                            .append(":")
+                            .withStyle(ChatFormatting.GRAY)
             );
+
+            for (Requirement req : requirements) {
+                boolean meets = skillModel.getSkillLevel(req.skill) >= req.level;
+
+                tooltips.add(
+                        Component.literal("")
+                                .append(getSkillDisplayComponent(req.skill))
+                                .append(" " + req.level)
+                                .withStyle(meets ? ChatFormatting.GREEN : ChatFormatting.RED)
+                );
+            }
+        }
+
+        if (craftRequirements != null && craftRequirements.length > 0) {
+            tooltips.add(Component.literal(""));
+            tooltips.add(
+                    Component.literal("Crafting:")
+                            .withStyle(ChatFormatting.GRAY)
+            );
+
+            for (Requirement req : craftRequirements) {
+                boolean meets = skillModel.getSkillLevel(req.skill) >= req.level;
+
+                tooltips.add(
+                        Component.literal("")
+                                .append(getSkillDisplayComponent(req.skill))
+                                .append(" " + req.level)
+                                .withStyle(meets ? ChatFormatting.GREEN : ChatFormatting.RED)
+                );
+            }
         }
     }
 

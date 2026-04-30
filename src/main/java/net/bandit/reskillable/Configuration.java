@@ -1276,9 +1276,10 @@ public class Configuration {
             ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
             if (id != null && id.getNamespace().equals(modId)) {
                 List<String> defaultRequirement = getDefaultRequirement(item);
-                if (!defaultRequirement.isEmpty()) {
-                    newEntries.put(id.toString(), defaultRequirement);
+                if (defaultRequirement.isEmpty()) {
+                    defaultRequirement = List.of("craft:1");
                 }
+                newEntries.put(id.toString(), defaultRequirement);
             }
         }
 

@@ -3,9 +3,13 @@
   "minVersion": "0.8",
   "package": "net.bandit.reskillable.mixin",
   "compatibilityLevel": "JAVA_21",
+  "plugin": "net.bandit.reskillable.mixin.ReskillableMixinConfigPlugin",
   "refmap": "reskillable.refmap.json",
   "mixins": [
     "CraftingContainerMixin",
+    "CookingPotBlockEntityMixin",
+    "StoveBlockEntityMixin",
+    "SkilletBlockEntityMixin",
     "SpellHelperMixin"
   ],
   "client": [

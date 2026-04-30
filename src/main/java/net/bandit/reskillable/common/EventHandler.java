@@ -5,6 +5,7 @@ import net.bandit.reskillable.common.capabilities.SkillModel;
 import net.bandit.reskillable.common.skills.Requirement;
 import net.bandit.reskillable.common.skills.Skill;
 import net.bandit.reskillable.common.skills.SkillAttributeBonus;
+import net.bandit.reskillable.common.network.payload.SyncSkillConfig;
 import net.bandit.reskillable.common.network.payload.SyncToClient;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -199,6 +200,13 @@ public class EventHandler {
         ServerPlayer player = (ServerPlayer) event.getEntity();
         SkillModel model = SkillModel.get(player);
         if (model != null) {
+            SyncSkillConfig.send(
+                    player,
+                    Configuration.getSkillLocks(),
+                    Configuration.getCraftSkillLocks(),
+                    Configuration.getAttackSkillLocks(),
+                    true
+            );
             SyncToClient.send(player);
             model.updateSkillAttributeBonuses(player);
         }

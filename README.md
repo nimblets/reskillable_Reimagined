@@ -162,13 +162,42 @@ If your skill is too low:
 
 ### 3. Craft Skill Restrictions
 
-Crafting can also be locked:
+Crafting can also be locked using the same system for ALL crafting:
 
 ```
 config/reskillable/craft_skill_locks.json
 ```
 
-You can make crafting recipes require certain skill levels.
+This works for:
+- **Vanilla crafting tables**
+- **Furnaces & other vanilla workstations** (via item locking)
+- **Farmer's Delight cooking pots** (if installed)
+- **Any modded crafting recipe** (just use the item ID)
+
+Example:
+```json
+{
+  "craftSkillLocks": {
+    "minecraft:diamond_pickaxe": ["mining:20"],
+    "minecraft:netherite_sword": ["attack:25"],
+    "minecraft:enchanting_table": ["magic:15"],
+    "minecraft:brewing_stand": ["magic:10"],
+    "farmersdelight:beef_stew": ["cooking:10"],
+    "modid:custom_item": ["skill_name:level"]
+  }
+}
+```
+
+**How it works:**
+- When a player tries to craft an item, Reskillable checks if it's in the lock list
+- If the player's skill level is too low, the recipe result won't appear in the crafting output
+- If they meet the requirement, crafting works normally
+
+**Farmer's Delight Integration:**
+- Lock Farmer's Delight cooking outputs using item-level restrictions
+- Add items like `farmersdelight:beef_stew` to `craft_skill_locks.json` to restrict them the same way
+- Players won't see the item as a result in their inventory until they meet the skill requirement
+- To use: just add `"farmersdelight:beef_stew": ["cooking:10"]` to your craft_skill_locks.json
 
 ---
 

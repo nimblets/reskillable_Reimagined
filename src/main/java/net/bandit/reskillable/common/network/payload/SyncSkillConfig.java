@@ -7,6 +7,9 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.io.*;
 import java.util.Map;
@@ -48,6 +51,27 @@ public record SyncSkillConfig(Map<String, Requirement[]> skillLocks,
                     }
                 }
         );
+
+    public static void send(ServerPlayer player, Map<String, Requirement[]> skillLocks,
+                            Map<String, Requirement[]> craftSkillLocks,
+                            Map<String, Requirement[]> attackSkillLocks,
+                            boolean isFinalChunk) {
+        PacketDistributor.sendToPlayer(player, new SyncSkillConfig(skillLocks, craftSkillLocks, attackSkillLocks, isFinalChunk));
+    }
+
+    public static void sendToAll(MinecraftServer server,
+                                 Map<String, Requirement[]> skillLocks,
+                                 Map<String, Requirement[]> craftSkillLocks,
+                                 Map<String, Requirement[]> attackSkillLocks,
+                                 boolean isFinalChunk) {
+        if (server == null) {
+            return;
+        }
+
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            send(player, skillLocks, craftSkillLocks, attackSkillLocks, isFinalChunk);
+        }
+    }
 
     private static byte[] compress(String data) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
